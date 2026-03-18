@@ -1,16 +1,25 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/user/application_security/sast/#available-cicd-variables
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure/
-# Dependency Scanning customization: https://docs.gitlab.com/user/application_security/dependency_scanning/#customizing-analyzer-behavior
-# Container Scanning customization: https://docs.gitlab.com/user/application_security/container_scanning/#customizing-analyzer-behavior
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ci/variables/#cicd-variable-precedence
 stages:
-- test
-- secret-detection
-variables:
-  SECRET_DETECTION_ENABLED: 'true'
-secret_detection:
-  stage: secret-detection
-include:
-- template: Security/Secret-Detection.gitlab-ci.yml
+  - deploy
+
+deploy_to_gcp_vm:
+  stage: deploy
+  image: python:3.12-slim
+
+  before_script:
+    - apt-get update
+    - apt-get install -y openssh-client sshpass
+    - python -m pip install --upgrade pip
+    - pip install "ansible-core>=2.16,<2.17"
+    - mkdir -p ~/.ssh
+    - printf "%s" "$SSH_PRIVATE_KEY" > ~/.ssh/newsgenie_oci
+    - chmod 600 ~/.ssh/newsgenie_oci
+    - ssh-keyscan -H "$VM_HOST" >> ~/.ssh/known_hosts
+    - export ANSIBLE_SSH_PRIVATE_KEY_FILE=~/.ssh/newsgenie_oci
+
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - ansible --version
+    - ansible-playbook -i ansible/inventory/hosts.yml ansible/playbooks/deploy_app.yml
+
+  only:
+    - main
