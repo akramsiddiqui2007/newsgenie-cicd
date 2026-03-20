@@ -17,4 +17,3 @@ script:
   
   # 4. Run the playbook pointing to the FILE path, not the variable
   - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/id_rsa ansible/playbooks/deploy_app.yml
-
