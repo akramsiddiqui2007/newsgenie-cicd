@@ -18,5 +18,6 @@ deploy_to_gcp_vm:
     - source .venv/bin/activate
     - export OPENAI_API_KEY="$OPENAI_API_KEY"
     - ansible-playbook -i ansible/inventory/hosts.yml ansible/playbooks/deploy_app.yml
+
   only:
     - main
