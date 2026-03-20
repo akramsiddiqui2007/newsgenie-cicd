@@ -8,7 +8,7 @@ deploy_to_gcp_vm:
 
   before_script:
     - cd "$CI_PROJECT_DIR"
-    - chmod 600 600 ~/.ssh/newsgenie_oci
+    - chmod 600 ~/.ssh/newsgenie_oci
     - python3 -m venv .venv
     - source .venv/bin/activate
     - pip install --upgrade pip
