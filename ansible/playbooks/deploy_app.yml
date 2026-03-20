@@ -34,3 +34,4 @@
         -p {{ app_port }}:{{ app_port }}
         -e OPENAI_API_KEY={{ openai_api_key }}
         {{ app_image }}
+
