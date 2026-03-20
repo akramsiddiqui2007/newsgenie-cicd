@@ -13,7 +13,7 @@ build_and_push_image:
   script:
     - cd "$CI_PROJECT_DIR"
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-    - docker build -t "$APP_IMAGE" -t "$APP_IMAGE_LATEST" .
+    - docker build -t "$APP_IMAGE" -t "$APP_IMAGE_LATEST" ./app
     - docker push "$APP_IMAGE"
     - docker push "$APP_IMAGE_LATEST"
   only:
