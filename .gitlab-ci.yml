@@ -3,23 +3,20 @@ stages:
 
 deploy_to_gcp_vm:
   stage: deploy
-  image: python:3.12-slim
+  tags:
+    - gcp-shell
 
   before_script:
-    - apt-get update
-    - apt-get install -y openssh-client sshpass
-    - python -m pip install --upgrade pip
+    - cd "$CI_PROJECT_DIR"
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install --upgrade pip
     - pip install "ansible-core>=2.16,<2.17"
-    - mkdir -p ~/.ssh
-    - printf "%s" "$SSH_PRIVATE_KEY" > ~/.ssh/newsgenie_oci
-    - chmod 600 ~/.ssh/newsgenie_oci
-    - ssh-keyscan -H "$VM_HOST" >> ~/.ssh/known_hosts
-    - export ANSIBLE_SSH_PRIVATE_KEY_FILE=~/.ssh/newsgenie_oci
 
   script:
     - cd "$CI_PROJECT_DIR"
-    - ansible --version
+    - source .venv/bin/activate
+    - export OPENAI_API_KEY="$OPENAI_API_KEY"
     - ansible-playbook -i ansible/inventory/hosts.yml ansible/playbooks/deploy_app.yml
-
   only:
     - main
