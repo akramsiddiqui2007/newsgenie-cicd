@@ -18,10 +18,10 @@ deploy_to_gcp_vm:
     - export ANSIBLE_HOST_KEY_CHECKING=False
 
   script:
-    - cd "$CI_PROJECT_DIR"
-    - source .venv/bin/activate
-    - export OPENAI_API_KEY="$OPENAI_API_KEY"
-    - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
+  - cd "$CI_PROJECT_DIR"
+  - source .venv/bin/activate
+  - export OPENAI_API_KEY="$OPENAI_API_KEY"
+  - ansible-playbook -i ansible/inventory/hosts.yml --private-key "$SSH_PRIVATE_KEY" ansible/playbooks/deploy_app.yml
 
   only:
     - main
