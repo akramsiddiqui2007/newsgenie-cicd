@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 from src.state import NewsGenieState
 from src.graph.workflow import newsgenie_graph
@@ -12,6 +13,10 @@ st.set_page_config(page_title="NewsGenie", page_icon="🧠", layout="wide")
 
 st.title("🧠 NewsGenie")
 st.caption("Agentic AI news assistant with routing, retrieval, ranking, and confidence-aware summaries")
+build_sha = os.getenv("APP_BUILD_SHA", "local")
+build_time = os.getenv("APP_BUILD_TIME", "local-dev")
+
+st.info(f"CI/CD Demo Build: {build_sha} | Built at: {build_time}")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
