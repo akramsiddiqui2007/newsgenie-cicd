@@ -1,14 +1,41 @@
-deploy_app:
-  stage: deploy
+stages:
+  - build
+  - deploy
+
+variables:
+  APP_IMAGE: "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
+  APP_IMAGE_LATEST: "$IMAGE_NAME:latest"
+
+build_and_push_image:
+  stage: build
+  tags:
+    - gcp-shell
   script:
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    # Write the key to a file so Ansible can read the PATH
-    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/newsgenie_oci
-    - chmod 600 ~/.ssh/newsgenie_oci
+    - cd "$CI_PROJECT_DIR"
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker build -t "$APP_IMAGE" -t "$APP_IMAGE_LATEST" .
+    - docker push "$APP_IMAGE"
+    - docker push "$APP_IMAGE_LATEST"
+  only:
+    - main
+
+deploy_to_gcp_vm:
+  stage: deploy
+  tags:
+    - gcp-shell
+  before_script:
+    - cd "$CI_PROJECT_DIR"
+    - chmod 600 "$SSH_PRIVATE_KEY"
     - python3 -m venv .venv
     - source .venv/bin/activate
+    - pip install --upgrade pip
     - pip install "ansible-core>=2.16,<2.17"
     - export ANSIBLE_HOST_KEY_CHECKING=False
-    # Point to the FILE path (~/.ssh/newsgenie_oci), not the variable
-    - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - source .venv/bin/activate
+    - export OPENAI_API_KEY="$OPENAI_API_KEY"
+    - export APP_IMAGE="$APP_IMAGE"
+    - ansible-playbook -i ansible/inventory/hosts.yml --private-key "$SSH_PRIVATE_KEY" ansible/playbooks/deploy_app.yml
+  only:
+    - main
