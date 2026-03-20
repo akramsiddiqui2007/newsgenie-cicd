@@ -25,6 +25,7 @@ deploy_to_gcp_vm:
     - gcp-shell
   before_script:
     - cd "$CI_PROJECT_DIR"
+    - chmod 700 ~/.ssh
     - chmod 600 ~/.ssh/newsgenie_oci
     - python3 -m venv .venv
     - source .venv/bin/activate
