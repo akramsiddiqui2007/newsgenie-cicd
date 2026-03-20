@@ -1,25 +1,17 @@
-stages:
-  - deploy
-
-deploy_to_gcp_vm:
-  stage: deploy
-  tags:
-    - gcp-shell
-
-  before_script:
-    - cd "$CI_PROJECT_DIR"
-    - chmod 600 ~/.ssh/newsgenie_oci
-    - python3 -m venv .venv
-    - source .venv/bin/activate
-    - pip install --upgrade pip
-    - pip install "ansible-core>=2.16,<2.17"
-    - export ANSIBLE_HOST_KEY_CHECKING=False
-
-  script:
-    - cd "$CI_PROJECT_DIR"
-    - source .venv/bin/activate
-    - export OPENAI_API_KEY="$OPENAI_API_KEY"
-    - ansible-playbook -i ansible/inventory/hosts.yml --private-key "$SSH_PRIVATE_KEY" ansible/playbooks/deploy_app.yml
-
-  only:
-    - main
+script:
+  - cd "$CI_PROJECT_DIR"
+  - python3 -m venv .venv
+  - source .venv/bin/activate
+  - pip install "ansible-core>=2.16,<2.17"
+  
+  # 1. Create the .ssh directory and a file for the key
+  - mkdir -p ~/.ssh
+  - echo "$SSH_PRIVATE_KEY" > ~/.ssh/newsgenie_key
+  
+  # 2. Fix permissions (SSH will fail if the file is too public)
+  - chmod 700 ~/.ssh
+  - chmod 600 ~/.ssh/newsgenie_key
+  
+  # 3. Use the PATH to the file in your command
+  - export ANSIBLE_HOST_KEY_CHECKING=False
+  - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_key ansible/playbooks/deploy_app.yml
