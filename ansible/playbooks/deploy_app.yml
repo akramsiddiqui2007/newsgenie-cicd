@@ -5,7 +5,7 @@
 
   vars:
     app_name: newsgenie
-    app_image: akramsiddiqui/newsgenie:latest
+    app_image: "{{ lookup('env', 'APP_IMAGE') | default('akramsiddiqui/newsgenie:latest', true) }}"
     app_port: 8501
     openai_api_key: "{{ lookup('env', 'OPENAI_API_KEY') }}"
 
