@@ -8,6 +8,10 @@ deploy_to_gcp_vm:
 
   before_script:
     - cd "$CI_PROJECT_DIR"
+    - mkdir -p ~/.ssh
+    - printf "%s" "$SSH_PRIVATE_KEY" > ~/.ssh/newsgenie_oci
+    - chmod 600 ~/.ssh/newsgenie_oci
+    - export GIT_SSH_COMMAND='ssh -i ~/.ssh/newsgenie_oci -o StrictHostKeyChecking=no'
     - python3 -m venv .venv
     - source .venv/bin/activate
     - pip install --upgrade pip
@@ -18,7 +22,7 @@ deploy_to_gcp_vm:
     - cd "$CI_PROJECT_DIR"
     - source .venv/bin/activate
     - export OPENAI_API_KEY="$OPENAI_API_KEY"
-    - ansible-playbook -i ansible/inventory/hosts.yml ansible/playbooks/deploy_app.yml
+    - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
 
   only:
     - main
