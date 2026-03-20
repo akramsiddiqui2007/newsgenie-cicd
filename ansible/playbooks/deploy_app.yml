@@ -1,0 +1,36 @@
+---
+- name: Deploy NewsGenie container
+  hosts: all
+  become: true
+
+  vars:
+    app_name: newsgenie
+    app_image: akramsiddiqui/newsgenie:latest
+    app_port: 8501
+    openai_api_key: "{{ lookup('env', 'OPENAI_API_KEY') }}"
+
+  tasks:
+    - name: Fail if OPENAI_API_KEY is missing
+      fail:
+        msg: "OPENAI_API_KEY environment variable is not set"
+      when: openai_api_key | length == 0
+
+    - name: Pull NewsGenie image
+      command: docker pull {{ app_image }}
+      register: docker_pull
+      changed_when: "'Downloaded newer image' in docker_pull.stdout or 'Pull complete' in docker_pull.stdout or 'Status: Downloaded newer image' in docker_pull.stdout"
+
+    - name: Stop existing NewsGenie container if running
+      command: docker rm -f {{ app_name }}
+      register: docker_rm
+      failed_when: false
+      changed_when: "'No such container' not in docker_rm.stderr"
+
+    - name: Run NewsGenie container
+      command: >
+        docker run -d
+        --name {{ app_name }}
+        --restart unless-stopped
+        -p {{ app_port }}:{{ app_port }}
+        -e OPENAI_API_KEY={{ openai_api_key }}
+        {{ app_image }}

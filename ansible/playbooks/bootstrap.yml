@@ -1,0 +1,29 @@
+---
+- name: Bootstrap NewsGenie VM
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - docker.io
+          - python3-pip
+        state: present
+
+    - name: Enable Docker service
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Add app user to docker group
+      user:
+        name: akram
+        groups: docker
+        append: true
