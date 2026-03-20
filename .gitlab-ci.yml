@@ -8,7 +8,6 @@ deploy_to_gcp_vm:
 
   before_script:
     - cd "$CI_PROJECT_DIR"
-    - chmod 700 ~/.ssh
     - chmod 600 "$SSH_PRIVATE_KEY"
     - python3 -m venv .venv
     - source .venv/bin/activate
