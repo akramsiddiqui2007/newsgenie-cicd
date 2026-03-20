@@ -26,6 +26,7 @@ deploy_to_gcp_vm:
   before_script:
     - cd "$CI_PROJECT_DIR"
     - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > /tmp/newsgenie_oci
+    - chmod 700 /tmp
     - chmod 600 /tmp/newsgenie_oci
     - python3 -m venv .venv
     - source .venv/bin/activate
