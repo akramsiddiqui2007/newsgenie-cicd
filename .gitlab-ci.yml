@@ -25,9 +25,7 @@ deploy_to_gcp_vm:
     - gcp-shell
   before_script:
     - cd "$CI_PROJECT_DIR"
-    - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > /tmp/newsgenie_oci
-    - chmod 700 /tmp
-    - chmod 600 /tmp/newsgenie_oci
+    - chmod 600 ~/.ssh/newsgenie_oci
     - python3 -m venv .venv
     - source .venv/bin/activate
     - pip install --upgrade pip
@@ -38,6 +36,6 @@ deploy_to_gcp_vm:
     - source .venv/bin/activate
     - export OPENAI_API_KEY="$OPENAI_API_KEY"
     - export APP_IMAGE="$APP_IMAGE"
-    - ansible-playbook -i ansible/inventory/hosts.yml --private-key /tmp/newsgenie_oci ansible/playbooks/deploy_app.yml
+    - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
   only:
     - main
