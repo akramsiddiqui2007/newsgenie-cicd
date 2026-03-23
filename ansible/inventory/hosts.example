@@ -1,0 +1,2 @@
+[gcp_vm]
+your-server ansible_host=YOUR_VM_IP ansible_user=YOUR_USER ansible_ssh_private_key_file=~/.ssh/your_key
