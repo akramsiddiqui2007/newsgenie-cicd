@@ -40,6 +40,7 @@ logs/
 
 # Ansible sensitive inventory and vars
 ansible/inventory/*
+ansible/inventory/hosts
 !ansible/inventory/README.md
 !ansible/inventory/*.example
 ansible/vars.yml
