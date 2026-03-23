@@ -64,3 +64,4 @@ override.tf.json
 
 # Local test artifacts
 .venv-test/
+terraform/terraform.tfvars
