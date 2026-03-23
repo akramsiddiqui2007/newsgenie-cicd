@@ -1,487 +1,679 @@
-# NewsGenie
+````markdown
+# NewsGenie CI/CD
 
-An agentic AI news assistant with a containerized application, Docker-based delivery, and an end-to-end CI/CD pipeline for automated build and deployment.
+NewsGenie is an agentic AI news assistant that routes, rewrites, expands, retrieves, and synthesizes news-related queries. This repository contains the full project in a single repo, including the application, Docker setup, GitLab CI/CD pipeline, deployment automation, infrastructure templates, and project documentation.
+
+---
 
 ## Table of Contents
 
-- [Project Overview](#project-overview)
-- [What This Project Solves](#what-this-project-solves)
-- [Key Features](#key-features)
-- [Architecture Overview](#architecture-overview)
-- [Repository Structure](#repository-structure)
-- [Technology Stack](#technology-stack)
-- [How the Agent Works](#how-the-agent-works)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Detailed Local Setup](#detailed-local-setup)
-- [Environment Variables](#environment-variables)
-- [Run with Docker](#run-with-docker)
-- [Run Tests](#run-tests)
-- [CI/CD Pipeline Overview](#cicd-pipeline-overview)
-- [Deployment Flow](#deployment-flow)
-- [GitHub Setup and Push Instructions](#github-setup-and-push-instructions)
-- [Security and Secret Handling](#security-and-secret-handling)
-- [Troubleshooting](#troubleshooting)
-- [Future Improvements](#future-improvements)
+1. [Project Overview](#project-overview)
+2. [Key Features](#key-features)
+3. [Repository Structure](#repository-structure)
+4. [Architecture Summary](#architecture-summary)
+5. [Tech Stack](#tech-stack)
+6. [Prerequisites](#prerequisites)
+7. [Environment Variables](#environment-variables)
+8. [Run the App Locally](#run-the-app-locally)
+9. [Run with Docker](#run-with-docker)
+10. [CI/CD Pipeline Overview](#cicd-pipeline-overview)
+11. [GitLab CI/CD Setup](#gitlab-cicd-setup)
+12. [Deployment with Ansible](#deployment-with-ansible)
+13. [Terraform Notes](#terraform-notes)
+14. [How to Trigger the Pipeline](#how-to-trigger-the-pipeline)
+15. [How to Verify Deployment](#how-to-verify-deployment)
+16. [Troubleshooting](#troubleshooting)
+17. [Security Notes](#security-notes)
+18. [Additional Documentation](#additional-documentation)
+19. [License](#license)
+
+---
 
 ## Project Overview
 
-**NewsGenie** is an agentic AI news assistant designed to process news-oriented user questions through a multi-step workflow instead of a single direct model call. The application routes the query, rewrites it for better retrieval, expands intent where needed, retrieves relevant content, and synthesizes a structured answer.
+NewsGenie is built as an agentic AI application for news workflows. Instead of sending every user input directly into a model in a single step, the application uses a structured workflow to improve response quality and resilience.
 
-The project is productionized with:
+The project includes:
 
-- a dedicated application folder under `app/`
+- application code under `app/`
 - Docker containerization
-- GitLab CI/CD automation
-- Ansible-based deployment
-- deployment to a GCP VM
-- a working build-and-deploy flow using a shell runner tagged `gcp-shell`
+- GitLab CI/CD pipeline
+- Ansible deployment automation
+- Terraform example configuration
+- documentation for architecture and CI/CD
 
-This repository keeps the **application code, Docker setup, Ansible deployment code, and CI/CD pipeline together** so the full system is versioned in one place.
+This repo is intentionally organized as a **single repository** so that application code, build logic, deployment automation, and documentation all evolve together.
 
-## What This Project Solves
-
-Most demo AI apps stop at local execution. This project goes further by showing how to:
-
-- build an agentic AI application
-- package it in Docker
-- automate builds and image publishing
-- deploy it using infrastructure automation
-- keep app and deployment code versioned together
-- make onboarding easier through clear documentation
-
-That makes NewsGenie both a useful application and a strong portfolio-grade engineering project.
+---
 
 ## Key Features
 
-- Agentic query workflow for news use cases
-- Query routing by type/category
-- Query rewriting for better retrieval quality
-- Query expansion for broader coverage
-- Resilience-oriented test flow
-- Dockerized application packaging
-- Automated image build and push
-- Automated deployment to GCP VM
-- GitLab CI/CD pipeline with separate build and deploy stages
-- Ansible-driven deployment logic
+- agentic workflow for news queries
+- query routing and classification
+- query rewriting and expansion
+- multiple model client integrations
+- news retrieval and web search tool integrations
+- Streamlit-based user interface
+- Dockerized application runtime
+- GitLab CI/CD pipeline for build and deployment
+- Ansible-based deployment flow
+- infrastructure-ready repository structure
 
-## Architecture Overview
-
-### Application flow
-
-1. User submits a news query
-2. The app classifies the query
-3. The query is rewritten for better retrieval
-4. The query is expanded with additional context if needed
-5. Relevant content is retrieved
-6. A final synthesized response is produced
-
-### Deployment flow
-
-1. Code is pushed to the repository
-2. GitLab CI pipeline starts on the `main` branch
-3. Docker image is built from `./app`
-4. The image is pushed to Docker Hub
-5. Ansible deploys the latest container version to the GCP VM
-
-### Current working CI/CD pattern
-
-This project currently uses the following working pattern:
-
-- Docker image is built from the repository's `app/` directory
-- GitLab Runner uses the `gcp-shell` tag
-- deployment runs against the GCP VM
-- Ansible is used during deploy
-- SSH key flow uses `~/.ssh/newsgenie_oci`
-- CI/CD definition is maintained in `.gitlab-ci.yml`
+---
 
 ## Repository Structure
 
 ```text
-newsgenie/
-├── app/                         # application source code and Docker build context
+newsgenie-cicd/
+├── app/
 │   ├── Dockerfile
+│   ├── app.py
 │   ├── requirements.txt
-│   ├── main.py
-│   ├── src/
-│   └── tests/
-├── ansible/                     # deployment playbooks and inventory examples
-│   ├── deploy.yml
+│   └── src/
+│       ├── config.py
+│       ├── prompts.py
+│       ├── state.py
+│       ├── graph/
+│       ├── models/
+│       ├── tools/
+│       └── utils/
+├── ansible/
 │   ├── inventory/
 │   │   ├── README.md
 │   │   └── hosts.example
-│   └── roles/
+│   └── vars.example.yml
 ├── docs/
-│   ├── cicd.md
 │   ├── architecture.md
-│   └── images/
-├── .gitlab-ci.yml
-├── .gitignore
+│   └── cicd.md
+├── terraform/
+│   └── terraform.tfvars.example
 ├── .env.example
-└── README.md
-```
+├── .gitignore
+├── .gitlab-ci.yml
+├── README.md
+└── LICENSE
+````
 
-> Keep the pipeline **in the same repository** as the app.  
-> The pipeline, Docker image, and Ansible deployment are all part of the same deliverable.
+---
 
-## Technology Stack
+## Architecture Summary
+
+At a high level, NewsGenie follows this flow:
+
+1. user submits a query in the Streamlit interface
+2. workflow logic classifies and routes the query
+3. query may be rewritten for better retrieval quality
+4. query may be expanded with additional context
+5. news and web retrieval tools are invoked
+6. retrieved content is filtered and synthesized
+7. model client generates the final answer
+8. UI presents the result back to the user
+
+Main entry point:
+
+* `app/app.py`
+
+Core workflow:
+
+* `app/src/graph/workflow.py`
+
+Model integrations:
+
+* `app/src/models/openai_client.py`
+* `app/src/models/gemini_client.py`
+
+Tool integrations:
+
+* `app/src/tools/news_api.py`
+* `app/src/tools/web_search.py`
+
+Detailed architecture notes are available in [docs/architecture.md](docs/architecture.md).
+
+---
+
+## Tech Stack
 
 ### Application
-- Python
-- Agentic AI workflow
-- LLM integration
-- retrieval and summarization logic
-- test modules for resilience and flow validation
+
+* Python
+* Streamlit
+* OpenAI client integration
+* Gemini client integration
 
 ### DevOps and Deployment
-- Docker
-- GitLab CI/CD
-- Ansible
-- Docker Hub
-- GCP VM
-- shell runner tagged `gcp-shell`
 
-## How the Agent Works
+* Docker
+* GitLab CI/CD
+* Ansible
+* Terraform
+* Docker Hub
+* GCP VM deployment target
 
-The NewsGenie workflow is structured in stages.
-
-### 1. Route Query
-The incoming request is first classified into a type and category so that the app knows how to process it.
-
-### 2. Rewrite Query
-The original user input is rewritten into a more retrieval-friendly version. This improves relevance and precision.
-
-### 3. Expand Query
-The system broadens the rewritten query by adding supporting context, alternate terms, or related scope.
-
-### 4. Retrieve Information
-The app retrieves relevant content using the optimized query representation.
-
-### 5. Synthesize Response
-The final response is generated from the retrieved material in a user-friendly structure.
+---
 
 ## Prerequisites
 
 Before running this project, make sure you have:
 
-- Python 3.10 or newer
-- Git
-- Docker
-- access to any required API keys
-- GitLab project access if using CI/CD
-- Docker Hub account for pushing images
-- GCP VM access for deployment
-- Ansible installed for manual deployments
+* Python 3.10 or above
+* `pip`
+* Docker installed
+* Git installed
+* a valid OpenAI API key
+* any required news API key used by the app
+* GitLab Runner access for CI/CD
+* Docker Hub repository for pushed images
+* target VM access for deployment
 
-## Quick Start
-
-```bash
-git clone https://github.com/YOUR_USERNAME/newsgenie.git
-cd newsgenie
-python -m venv .venv
-source .venv/bin/activate
-pip install -r app/requirements.txt
-cp .env.example .env
-python app/main.py
-```
-
-If your app is Streamlit-based:
-
-```bash
-streamlit run app/main.py
-```
-
-## Detailed Local Setup
-
-### Step 1: Clone the repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/newsgenie.git
-cd newsgenie
-```
-
-### Step 2: Create a virtual environment
-
-#### Linux/macOS
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-#### Windows PowerShell
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-### Step 3: Install Python dependencies
-
-```bash
-pip install -r app/requirements.txt
-```
-
-### Step 4: Create environment file
-
-#### Linux/macOS
-```bash
-cp .env.example .env
-```
-
-#### Windows PowerShell
-```powershell
-Copy-Item .env.example .env
-```
-
-### Step 5: Add your environment values
-
-Open `.env` and set your real values.
-
-Example:
-
-```env
-OPENAI_API_KEY=your_api_key_here
-NEWS_API_KEY=your_news_api_key_here
-APP_ENV=development
-PORT=8501
-```
-
-### Step 6: Start the app
-
-```bash
-python app/main.py
-```
-
-Or, if applicable:
-
-```bash
-streamlit run app/main.py
-```
+---
 
 ## Environment Variables
 
-Keep a safe template file in the repo as `.env.example`.
+Create a local `.env` file from the example file.
 
-Recommended structure:
+### Example
+
+```bash
+cp .env.example .env
+```
+
+Typical contents:
 
 ```env
-OPENAI_API_KEY=your_api_key_here
-NEWS_API_KEY=your_news_api_key_here
+OPENAI_API_KEY=your_real_openai_api_key
+NEWS_API_KEY=your_real_news_api_key
 APP_ENV=development
 PORT=8501
 ```
 
-### Important
-- Never commit `.env`
-- Never commit real API keys
-- Keep only example templates in GitHub
+Important notes:
+
+* do not commit `.env`
+* do not surround keys with unnecessary quotes unless your parser requires it
+* use a valid active OpenAI key
+* keep production secrets in secure secret storage, not in git
+
+---
+
+## Run the App Locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/akramsiddiqui2007/newsgenie-cicd.git
+cd newsgenie-cicd
+```
+
+### 2. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install --upgrade pip
+pip install -r app/requirements.txt
+```
+
+### 4. Create your local `.env`
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Add your real keys and save the file.
+
+### 5. Start the app
+
+This project uses Streamlit.
+
+```bash
+streamlit run app/app.py
+```
+
+### 6. Open in browser
+
+```text
+http://localhost:8501
+```
+
+---
 
 ## Run with Docker
 
-### Build the image
+### 1. Build the image
+
+Important: the Docker build context is the `app/` directory.
 
 ```bash
 docker build -t newsgenie:latest ./app
 ```
 
-### Run the container
+### 2. Run the container
 
 ```bash
-docker run --env-file .env -p 8501:8501 newsgenie:latest
+docker run --rm --env-file .env -p 8501:8501 newsgenie:latest
 ```
 
-Adjust the port if your app uses a different one.
+### 3. Open the app
 
-### Verify the container
-
-```bash
-docker ps
+```text
+http://localhost:8501
 ```
 
-## Run Tests
+### 4. What successful startup looks like
 
-From the project root:
+You should see output similar to:
 
-```bash
-python -m pytest
-```
+* Streamlit app starts successfully
+* Local URL is shown
+* no API key authentication error
+* app responds to queries
 
-For targeted tests:
-
-```bash
-python -m tests.test_step11_resilience
-```
-
-Update the command if your actual test path differs.
+---
 
 ## CI/CD Pipeline Overview
 
-This project uses **GitLab CI/CD** with two main stages:
+This project uses **GitLab CI/CD** for build and deployment automation.
 
-- `build`
-- `deploy`
+Pipeline file:
 
-### Build stage
-The build stage:
+* `.gitlab-ci.yml`
 
-- runs on a runner tagged `gcp-shell`
-- logs into Docker Hub
-- builds the Docker image from `./app`
-- tags the image with commit SHA and `latest`
-- pushes both images to Docker Hub
+Current flow:
 
-### Deploy stage
-The deploy stage:
-
-- runs on the same tagged runner
-- prepares Python/Ansible environment
-- uses `~/.ssh/newsgenie_oci`
-- runs the Ansible deployment playbook
-- updates the running container on the GCP VM
-
-For full details, see [`docs/cicd.md`](docs/cicd.md).
-
-## Deployment Flow
-
-The current working deployment model is:
-
-1. Push code to `main`
-2. GitLab starts pipeline
+1. code is pushed to the `main` branch
+2. GitLab pipeline starts
 3. Docker image is built from `./app`
-4. Image is pushed to Docker Hub
-5. Ansible connects to the deployment target
-6. The target host pulls the new image
-7. Existing container is replaced with the latest one
+4. image is tagged with commit SHA and `latest`
+5. image is pushed to Docker Hub
+6. Ansible deployment runs against the target VM
 
-### Manual deployment example
+Pipeline stages:
 
-```bash
-cd ansible
-ansible-playbook -i inventory/hosts deploy.yml
+* `build`
+* `deploy`
+
+---
+
+## GitLab CI/CD Setup
+
+### 1. Runner requirement
+
+Your GitLab Runner must be active and tagged as:
+
+```text
+gcp-shell
 ```
 
-Use a sanitized or local private inventory file that is not committed to GitHub.
+### 2. Required GitLab CI/CD variables
 
-## GitHub Setup and Push Instructions
+Configure these in:
 
-### Step 1: Clean the repository
+**GitLab → Settings → CI/CD → Variables**
 
-Make sure the repo does **not** contain:
+Required variables:
 
-- `.venv/`
-- `.env`
-- SSH private keys
-- Docker credentials
-- local logs
-- cache directories
-- sensitive inventory files
+* `DOCKERHUB_USERNAME`
+* `DOCKERHUB_TOKEN`
+* `IMAGE_NAME`
 
-### Step 2: Check `.gitignore`
+Example:
 
-Ensure your `.gitignore` excludes local and secret files.
-
-### Step 3: Initialize Git if needed
-
-```bash
-git init
+```text
+IMAGE_NAME=docker.io/yourdockerhubusername/newsgenie
 ```
 
-### Step 4: Add files
+### 3. Current pipeline pattern
+
+The current pipeline builds the image from:
+
+```bash
+./app
+```
+
+and uses a shell runner tagged:
+
+```text
+gcp-shell
+```
+
+### 4. Example pipeline behavior
+
+Build stage:
+
+* logs in to Docker Hub
+* builds Docker image from `./app`
+* tags image with commit SHA
+* tags image as `latest`
+* pushes both tags
+
+Deploy stage:
+
+* prepares Python virtual environment
+* installs Ansible
+* uses SSH key on runner host
+* runs Ansible playbook
+
+### 5. Current pipeline file
+
+Your repo contains:
+
+* `.gitlab-ci.yml`
+
+The pipeline should remain versioned in the same repo as the app.
+
+### 6. Example `.gitlab-ci.yml`
+
+Below is the working structure used in this project:
+
+```yaml
+stages:
+  - build
+  - deploy
+
+variables:
+  APP_IMAGE: "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
+  APP_IMAGE_LATEST: "$IMAGE_NAME:latest"
+
+build_and_push_image:
+  stage: build
+  tags:
+    - gcp-shell
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker build -t "$APP_IMAGE" -t "$APP_IMAGE_LATEST" ./app
+    - docker push "$APP_IMAGE"
+    - docker push "$APP_IMAGE_LATEST"
+  only:
+    - main
+
+deploy_to_gcp_vm:
+  stage: deploy
+  tags:
+    - gcp-shell
+  before_script:
+    - cd "$CI_PROJECT_DIR"
+    - chmod 600 ~/.ssh/newsgenie_oci
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install --upgrade pip
+    - pip install ansible
+  script:
+    - ansible-playbook -i ansible/inventory/hosts.example ansible/deploy.yml
+  only:
+    - main
+```
+
+### 7. Notes about the deployment command
+
+The current checked-in pipeline uses:
+
+```bash
+ansible-playbook -i ansible/inventory/hosts.example ansible/deploy.yml
+```
+
+That is acceptable as a documented example, but for a real deployment you should use a real inventory file on the runner host, not `hosts.example`.
+
+A production-style command would look like:
+
+```bash
+ansible-playbook -i ansible/inventory/hosts ansible/deploy.yml
+```
+
+---
+
+## Deployment with Ansible
+
+This repository includes Ansible-related files and examples under:
+
+* `ansible/`
+
+Inventory examples:
+
+* `ansible/inventory/hosts.example`
+* `ansible/inventory/README.md`
+
+Vars example:
+
+* `ansible/vars.example.yml`
+
+### Important
+
+Do not commit:
+
+* real inventory files
+* live VM IPs if sensitive
+* private keys
+* secret vars files such as `ansible/vars.yml`
+
+### Example deployment command
+
+For a real deployment setup, the command will look like:
+
+```bash
+ansible-playbook -i ansible/inventory/hosts ansible/deploy.yml
+```
+
+If you are using an example inventory for documentation/testing only:
+
+```bash
+ansible-playbook -i ansible/inventory/hosts.example ansible/deploy.yml
+```
+
+Use a real inventory file on the runner or deployment host for actual deployments.
+
+---
+
+## Terraform Notes
+
+Terraform example values are kept in:
+
+* `terraform/terraform.tfvars.example`
+
+Do not commit:
+
+* `.terraform/`
+* `*.tfstate`
+* `*.tfstate.*`
+* `.terraform.lock.hcl` if you do not want environment-specific lock tracking
+* live `terraform.tfvars` with secrets
+
+This repository is configured to keep local Terraform artifacts out of git.
+
+---
+
+## How to Trigger the Pipeline
+
+### 1. Make a small code change
+
+Example: update a Streamlit title or caption in:
+
+* `app/app.py`
+
+### 2. Test locally first
+
+```bash
+docker build -t newsgenie:latest ./app
+docker run --rm --env-file .env -p 8501:8501 newsgenie:latest
+```
+
+Open:
+
+```text
+http://localhost:8501
+```
+
+### 3. Commit and push
 
 ```bash
 git add .
+git commit -m "Small UI update"
+git push origin main
 ```
 
-### Step 5: Commit
+### 4. Watch the GitLab pipeline
+
+Confirm:
+
+* build job starts
+* image builds successfully
+* image pushes to Docker Hub
+* deploy job starts
+* deploy job completes successfully
+
+---
+
+## How to Verify Deployment
+
+After the pipeline runs:
+
+### 1. Check GitLab job logs
+
+Verify:
+
+* Docker build completed
+* Docker push completed
+* Ansible deployment completed
+
+### 2. Check Docker Hub
+
+Confirm:
+
+* new image tag with commit SHA exists
+* `latest` tag is updated
+
+### 3. Check the target VM
+
+SSH into the VM and run:
 
 ```bash
-git commit -m "Initial commit: NewsGenie app, Docker, CI/CD, docs, and deployment automation"
+docker ps
+docker images
+docker logs <container_id>
 ```
 
-### Step 6: Create GitHub repo
+### 4. Check the deployed application
 
-Create a new GitHub repository named `newsgenie`.
+Open the deployed URL in browser and confirm the latest code change is visible.
 
-### Step 7: Add remote
-
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/newsgenie.git
-```
-
-### Step 8: Push
-
-```bash
-git branch -M main
-git push -u origin main
-```
-
-## Security and Secret Handling
-
-Do not commit any of the following:
-
-- `.env`
-- SSH private keys
-- cloud credentials
-- Docker Hub tokens
-- real server IPs if they are sensitive
-- unmasked inventory files
-- local runner secrets
-
-Use safe placeholders such as:
-
-- `.env.example`
-- `ansible/inventory/hosts.example`
+---
 
 ## Troubleshooting
 
-### Virtual environment activation fails
-Check that Python is installed and available on your system path.
+### App starts but API calls fail with 401
 
-### Docker build fails
-Confirm that:
-- `app/Dockerfile` exists
-- `app/requirements.txt` is correct
-- the build context is `./app`
+Cause:
 
-### CI pipeline cannot log in to Docker Hub
+* invalid or revoked API key
+
+Fix:
+
+* update `.env`
+* confirm correct variable names
+* restart the container
+
+### Streamlit starts locally but Docker fails
+
 Check:
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN`
-- `IMAGE_NAME`
 
-### SSH key permission issue
-Run:
+* `app/Dockerfile`
+* `app/requirements.txt`
+* correct port mapping
+* correct env file passed to container
 
-```bash
-chmod 600 ~/.ssh/newsgenie_oci
-```
+### GitHub push blocked by secrets
 
-### Ansible cannot connect to the deployment host
+Cause:
+
+* secrets were committed into repo history
+
+Fix:
+
+* remove secret from tracked files
+* rewrite history if needed
+* rotate the exposed secret
+
+### GitHub push blocked by large Terraform/provider files
+
+Cause:
+
+* `.terraform/` or provider binaries were committed
+
+Fix:
+
+* remove them from git
+* ignore Terraform local artifacts
+* recommit clean files only
+
+### GitLab runner does not pick up jobs
+
 Check:
-- VM IP and host name
-- SSH username
-- firewall rules
-- private key path
-- inventory settings
 
-## Future Improvements
+* runner is online
+* runner has the `gcp-shell` tag
+* project is allowed to use the runner
 
-- add architecture diagrams under `docs/images/`
-- add monitoring and logging
-- add rollback support in deployment
-- add post-deploy smoke tests
-- add environment-specific deployment profiles
-- add GitHub Actions variant if needed
-- add Kubernetes deployment option
+### Docker login fails in pipeline
 
-## Author
+Check:
 
-Akram Siddiqui
+* `DOCKERHUB_USERNAME`
+* `DOCKERHUB_TOKEN`
+* `IMAGE_NAME`
 
-## License
+### Deploy job fails
 
-Add your preferred license here.
+Check:
+
+* SSH key exists on runner
+* SSH key has correct permissions
+* Ansible can run on runner
+* inventory path is correct
+* target VM is reachable
+
+---
+
+## Security Notes
+
+This repo intentionally keeps secret-bearing files out of version control.
+
+Safe example files committed:
+
+* `.env.example`
+* `ansible/vars.example.yml`
+* `ansible/inventory/hosts.example`
+* `terraform/terraform.tfvars.example`
+
+Do not commit:
+
+* `.env`
+* `ansible/vars.yml`
+* real inventory files
+* SSH private keys
+* Terraform state files
+* Docker auth credentials
+
+If a secret was ever committed, rotate it immediately.
+
+---
 
 ## Additional Documentation
 
-- [Architecture](docs/architecture.md)
-- [CI/CD](docs/cicd.md)
+* [Architecture](docs/architecture.md)
+* [CI/CD](docs/cicd.md)
+
+---
+
+## License
+
+This project is licensed under the terms included in the [LICENSE](LICENSE) file.
+
+```
+```
+
