@@ -11,9 +11,10 @@
     - name: Stop existing NewsGenie container if running
       shell: docker rm -f newsgenie || true
 
-    - name: Start NewsGenie container
+    - name: Start NewsGenie container from latest image
       shell: >
         docker run -d --name newsgenie
         --restart unless-stopped
         -p 8501:8501
+        --env-file /home/akram/.env
         {{ app_image }}
