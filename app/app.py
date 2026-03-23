@@ -13,6 +13,7 @@ st.set_page_config(page_title="NewsGenie", page_icon="🧠", layout="wide")
 
 st.title("🧠 NewsGenie")
 st.caption("Agentic AI news assistant with routing, retrieval, ranking, and confidence-aware summaries")
+st.caption("CI/CD validation build")
 build_sha = os.getenv("APP_BUILD_SHA", "local")
 build_time = os.getenv("APP_BUILD_TIME", "local-dev")
 
