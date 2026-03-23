@@ -480,3 +480,8 @@ Akram Siddiqui
 ## License
 
 Add your preferred license here.
+
+## Additional Documentation
+
+- [Architecture](docs/architecture.md)
+- [CI/CD](docs/cicd.md)
