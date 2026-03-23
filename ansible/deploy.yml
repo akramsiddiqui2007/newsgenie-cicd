@@ -1,0 +1,19 @@
+- name: Deploy NewsGenie container
+  hosts: gcp_vm
+  become: false
+  vars:
+    app_image: "{{ lookup('env', 'IMAGE_NAME') }}:latest"
+
+  tasks:
+    - name: Pull latest Docker image
+      shell: docker pull {{ app_image }}
+
+    - name: Stop existing NewsGenie container if running
+      shell: docker rm -f newsgenie || true
+
+    - name: Start NewsGenie container
+      shell: >
+        docker run -d --name newsgenie
+        --restart unless-stopped
+        -p 8501:8501
+        {{ app_image }}
