@@ -37,9 +37,7 @@ deploy_to_gcp_vm:
     - source .venv/bin/activate
     - export OPENAI_API_KEY="$OPENAI_API_KEY"
     - export APP_IMAGE="$APP_IMAGE"
-    - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
+    - ansible-playbook -i ansible/inventory/hosts --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
     - pip install ansible
-  script:
-    - ansible-playbook -i ansible/inventory/hosts.example ansible/deploy.yml
   only:
     - main
