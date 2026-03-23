@@ -14,6 +14,7 @@ build_and_push_image:
     - cd "$CI_PROJECT_DIR"
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
     - docker build --build-arg APP_BUILD_SHA="$CI_COMMIT_SHORT_SHA" --build-arg APP_BUILD_TIME="$(date -u +'%Y-%m-%d %H:%M:%S UTC')" -t "$APP_IMAGE" -t "$APP_IMAGE_LATEST" ./app
+    - docker build -t "$APP_IMAGE" -t "$APP_IMAGE_LATEST" ./app
     - docker push "$APP_IMAGE"
     - docker push "$APP_IMAGE_LATEST"
   only:
@@ -37,5 +38,8 @@ deploy_to_gcp_vm:
     - export OPENAI_API_KEY="$OPENAI_API_KEY"
     - export APP_IMAGE="$APP_IMAGE"
     - ansible-playbook -i ansible/inventory/hosts.yml --private-key ~/.ssh/newsgenie_oci ansible/playbooks/deploy_app.yml
+    - pip install ansible
+  script:
+    - ansible-playbook -i ansible/inventory/hosts.example ansible/deploy.yml
   only:
     - main
