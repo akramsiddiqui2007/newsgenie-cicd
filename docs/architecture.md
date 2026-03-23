@@ -446,3 +446,118 @@ Optional future enhancements:
 ## 14. Quick Pitch
 
 **NewsGenie** is an agentic AI news assistant that understands vague follow-up questions, rewrites them into precise retrieval queries, gathers live coverage from multiple sources, filters and ranks results by relevance, and returns confidence-aware summaries in a polished Streamlit interface.
+=======
+# NewsGenie Architecture
+
+## Overview
+
+NewsGenie is an agentic AI news assistant that processes user queries through a structured workflow instead of a single direct LLM call. The system improves reliability by routing queries, rewriting them for retrieval, expanding context, retrieving relevant information, and synthesizing a final answer.
+
+---
+
+## High-Level Components
+
+### 1. User Interface
+The application entry point is located in:
+
+- `app/app.py`
+
+This is the main interface for interacting with the NewsGenie assistant.
+
+### 2. Application Configuration
+Configuration and environment-specific settings are managed in:
+
+- `app/src/config.py`
+
+### 3. Workflow Engine
+The main workflow orchestration logic is in:
+
+- `app/src/graph/workflow.py`
+
+This is where the agentic flow is defined.
+
+### 4. Model Clients
+The project supports model integrations through:
+
+- `app/src/models/openai_client.py`
+- `app/src/models/gemini_client.py`
+
+These modules are responsible for interacting with the underlying LLM providers.
+
+### 5. Prompt Management
+Prompt templates and prompt-building logic are in:
+
+- `app/src/prompts.py`
+
+### 6. State Management
+Application and workflow state handling is in:
+
+- `app/src/state.py`
+
+### 7. Retrieval and External Tools
+The project retrieves and enriches information using:
+
+- `app/src/tools/news_api.py`
+- `app/src/tools/web_search.py`
+
+### 8. Utility Layer
+Shared helper functions and support logic are located in:
+
+- `app/src/utils/`
+
+This includes:
+- answer quality checks
+- common helper functions
+- news-specific formatting helpers
+- UI helpers
+
+---
+
+## End-to-End Workflow
+
+The NewsGenie processing flow follows these steps:
+
+1. A user enters a news-related query through the app interface.
+2. The query is processed by the workflow engine.
+3. The workflow determines how the query should be handled.
+4. The query may be rewritten to improve retrieval quality.
+5. The query may be expanded with additional context or related terms.
+6. News and web retrieval tools are invoked.
+7. Retrieved information is filtered and synthesized.
+8. The model generates a final answer for the user.
+9. Utility functions help format and evaluate the response.
+
+---
+
+## Logical Flow Diagram
+
+```text
+User
+  |
+  v
+app/app.py
+  |
+  v
+Workflow Engine
+(app/src/graph/workflow.py)
+  |
+  +--> Prompt Layer
+  |    (app/src/prompts.py)
+  |
+  +--> State Handling
+  |    (app/src/state.py)
+  |
+  +--> Model Clients
+  |    |- openai_client.py
+  |    `- gemini_client.py
+  |
+  +--> Retrieval Tools
+       |- news_api.py
+       `- web_search.py
+  |
+  v
+Utilities / Post-processing
+(app/src/utils/)
+  |
+  v
+Final Response to User
