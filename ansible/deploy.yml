@@ -2,16 +2,16 @@
   hosts: gcp_vm
   become: false
   vars:
-    app_image: "{{ lookup('env', 'IMAGE_NAME') }}:latest"
+    app_image: "{{ lookup('env', 'APP_IMAGE') }}"
 
   tasks:
-    - name: Pull latest Docker image
+    - name: Pull target Docker image
       shell: docker pull {{ app_image }}
 
     - name: Stop existing NewsGenie container if running
       shell: docker rm -f newsgenie || true
 
-    - name: Start NewsGenie container from latest image
+    - name: Start NewsGenie container from target image
       shell: >
         docker run -d --name newsgenie
         --restart unless-stopped
