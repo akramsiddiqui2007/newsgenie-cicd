@@ -1,22 +1,66 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+.venv-test/
+venv/
+env/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+*.tar
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Ansible sensitive inventory and vars
+ansible/inventory/*
+!ansible/inventory/README.md
+!ansible/inventory/*.example
+ansible/vars.yml
+
+# Keys
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Terraform
 .terraform/
-.terraform.lock.hcl
+terraform/.terraform/
 *.tfstate
 *.tfstate.*
+.terraform.lock.hcl
 crash.log
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-.venv/
-venv/
-__pycache__/
-*.pyc
-
-ansible/inventory/hosts.generated.yml
-terraform.tfvars
-*.pem
-*.key
-
-kubeconfig
-
+# Local test artifacts
+.venv-test/
