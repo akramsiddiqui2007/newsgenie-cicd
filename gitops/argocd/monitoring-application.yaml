@@ -24,3 +24,5 @@ spec:
     namespace: monitoring
   syncPolicy:
     automated: {}
+    syncOptions:
+      - ServerSideApply=true
