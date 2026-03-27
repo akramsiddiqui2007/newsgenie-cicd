@@ -4,6 +4,7 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - service.yaml
+  - ingress.yaml
 images:
   - name: akramsiddiqui/newsgenie
     newName: akramsiddiqui/newsgenie
