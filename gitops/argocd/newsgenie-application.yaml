@@ -12,4 +12,5 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: newsgenie
-  syncPolicy: {}
+  syncPolicy:
+    automated: {}
