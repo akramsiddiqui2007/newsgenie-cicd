@@ -7,4 +7,4 @@ resources:
 images:
   - name: akramsiddiqui/newsgenie
     newName: akramsiddiqui/newsgenie
-    newTag: latest
+    newTag: e8b2fa20
