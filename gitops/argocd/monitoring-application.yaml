@@ -22,7 +22,18 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: monitoring-grafana
+      namespace: monitoring
+      jqPathExpressions:
+        - '.spec.template.metadata.annotations."checksum/config"'
+        - '.spec.template.metadata.annotations."checksum/dashboards-json-config"'
+        - '.spec.template.metadata.annotations."checksum/sc-dashboard-provider-config"'
+        - '.spec.template.metadata.annotations."checksum/secret"'
   syncPolicy:
     automated: {}
     syncOptions:
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
