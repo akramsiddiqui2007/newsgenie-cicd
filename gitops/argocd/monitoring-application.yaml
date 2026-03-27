@@ -5,10 +5,20 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/akramsiddiqui2007/newsgenie-cicd.git
-    targetRevision: main
-    path: gitops/monitoring
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 82.15.0
+      helm:
+        releaseName: monitoring
+        valueFiles:
+          - $values/gitops/monitoring/kube-prometheus-stack-values.yaml
+    - repoURL: https://github.com/akramsiddiqui2007/newsgenie-cicd.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/akramsiddiqui2007/newsgenie-cicd.git
+      targetRevision: main
+      path: gitops/monitoring
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
