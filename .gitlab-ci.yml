@@ -27,8 +27,8 @@ update_gitops_image_tag:
     - cd "$CI_PROJECT_DIR"
     - git config user.name "GitLab CI"
     - git config user.email "gitlab-ci@users.noreply.gitlab.com"
-    - sed -i "s/^    newTag: .*/    newTag: ${CI_COMMIT_SHORT_SHA}/" gitops/newsgenie/kustomization.yaml
-    - grep -n "newTag:" gitops/newsgenie/kustomization.yaml
+    - 'sed -i "s/^    newTag: .*/    newTag: ${CI_COMMIT_SHORT_SHA}/" gitops/newsgenie/kustomization.yaml'
+    - 'grep -n "newTag:" gitops/newsgenie/kustomization.yaml'
     - git add gitops/newsgenie/kustomization.yaml
     - |
       if git diff --cached --quiet; then
@@ -36,6 +36,6 @@ update_gitops_image_tag:
         exit 0
       fi
     - git commit -m "Update NewsGenie image tag to ${CI_COMMIT_SHORT_SHA} [skip ci]"
-    - git push "https://oauth2:${GITHUB_TOKEN}@github.com/akramsiddiqui2007/newsgenie-cicd.git" HEAD:main
+    - 'git push "https://oauth2:${GITHUB_TOKEN}@github.com/akramsiddiqui2007/newsgenie-cicd.git" HEAD:main'
   only:
     - main
