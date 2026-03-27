@@ -3,6 +3,7 @@ alertmanager:
 
 grafana:
   enabled: true
+  adminPassword: "NizqBMdOGHAGtngTwwEunxxvEZUuQrAdAjrBwkaD"
   service:
     type: ClusterIP
   persistence:
