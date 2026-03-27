@@ -8,4 +8,4 @@ resources:
 images:
   - name: akramsiddiqui/newsgenie
     newName: akramsiddiqui/newsgenie
-    newTag: 96aa462e
+    newTag: ca6e4cab
