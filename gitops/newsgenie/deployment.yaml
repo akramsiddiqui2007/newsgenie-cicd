@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newsgenie
+  namespace: newsgenie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: newsgenie
+  template:
+    metadata:
+      labels:
+        app: newsgenie
+    spec:
+      containers:
+        - name: newsgenie
+          image: akramsiddiqui/newsgenie:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8501
+          envFrom:
+            - secretRef:
+                name: newsgenie-env
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
