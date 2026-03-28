@@ -1,0 +1,24 @@
+- name: Check if Argo CD server deployment exists
+  command: kubectl -n {{ argocd_namespace }} get deployment argocd-server
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: argocd_server
+  failed_when: false
+  changed_when: false
+
+- name: Ensure Argo CD namespace exists
+  command: kubectl create namespace {{ argocd_namespace }}
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: argocd_ns_create
+  failed_when: false
+  changed_when: "'AlreadyExists' not in (argocd_ns_create.stderr | default('')) and argocd_ns_create.rc != 0"
+
+- name: Install Argo CD if missing
+  command: >
+    kubectl apply -n {{ argocd_namespace }}
+    --server-side --force-conflicts
+    -f {{ argocd_install_url }}
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  when: argocd_server.rc != 0

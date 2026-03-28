@@ -1,0 +1,51 @@
+- name: Wait for Argo CD server deployment to exist
+  command: kubectl -n {{ argocd_namespace }} get deployment argocd-server
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: argocd_server_ready
+  changed_when: false
+  retries: 12
+  delay: 10
+  until: argocd_server_ready.rc == 0
+
+- name: Ensure bootstrap temp directory exists
+  file:
+    path: /tmp/argocd-bootstrap
+    state: directory
+    mode: '0755'
+
+- name: Copy NewsGenie Argo CD application manifest
+  copy:
+    src: "{{ playbook_dir }}/../gitops/argocd/newsgenie-application.yaml"
+    dest: /tmp/argocd-bootstrap/newsgenie-application.yaml
+    mode: '0644'
+
+- name: Copy monitoring Argo CD application manifest
+  copy:
+    src: "{{ playbook_dir }}/../gitops/argocd/monitoring-application.yaml"
+    dest: /tmp/argocd-bootstrap/monitoring-application.yaml
+    mode: '0644'
+
+- name: Apply NewsGenie Argo CD application
+  command: kubectl apply -f /tmp/argocd-bootstrap/newsgenie-application.yaml
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: newsgenie_app_apply
+  changed_when: "'created' in newsgenie_app_apply.stdout or 'configured' in newsgenie_app_apply.stdout"
+
+- name: Apply monitoring Argo CD application
+  command: kubectl apply -f /tmp/argocd-bootstrap/monitoring-application.yaml
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: monitoring_app_apply
+  changed_when: "'created' in monitoring_app_apply.stdout or 'configured' in monitoring_app_apply.stdout"
+
+- name: Wait for Argo CD applications to exist
+  command: kubectl -n {{ argocd_namespace }} get applications.argoproj.io
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: argocd_apps_ready
+  changed_when: false
+  retries: 12
+  delay: 10
+  until: argocd_apps_ready.rc == 0

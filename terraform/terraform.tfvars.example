@@ -1,3 +1,20 @@
-project_id = "project-8be6a108-f8c8-4ef9-879"
-region     = "us-central1"
-zone       = "us-central1-a"
+project_id          = "project-8be6a108-f8c8-4ef9-879"
+region              = "us-central1"
+zone                = "us-central1-a"
+network_name        = "newsgenie-vpc"
+
+vm_name             = "newsgenie-vm-rebuild"
+machine_type        = "e2-standard-2"
+instance_tag        = "newsgenie-rebuild"
+firewall_name_prefix = "newsgenie-rebuild"
+
+static_ip_name      = "newsgenie-ip-rebuild"
+static_ip_address   = ""
+
+ssh_source_cidr     = "YOUR_PUBLIC_IP/32"
+
+ssh_user            = "akram"
+ssh_public_key      = "PASTE_PUBLIC_KEY_HERE"
+
+boot_disk_source    = ""
+boot_image          = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"

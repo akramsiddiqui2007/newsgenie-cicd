@@ -1,0 +1,46 @@
+- name: Check if K3s service exists
+  command: systemctl is-active k3s
+  register: k3s_active
+  failed_when: false
+  changed_when: false
+
+- name: Install K3s if missing
+  shell: curl -sfL https://get.k3s.io | sh -
+  args:
+    creates: /usr/local/bin/k3s
+  when: k3s_active.rc != 0
+
+- name: Wait for Kubernetes API via K3s
+  command: k3s kubectl get nodes
+  register: k3s_nodes
+  changed_when: false
+  retries: 12
+  delay: 10
+  until: k3s_nodes.rc == 0
+
+- name: Ensure user kubeconfig directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0700'
+
+- name: Copy K3s kubeconfig for user access
+  copy:
+    src: "{{ k3s_kubeconfig }}"
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+
+- name: Ensure KUBECONFIG export exists in user bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export KUBECONFIG=$HOME/.kube/config'
+    state: present
+    create: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'

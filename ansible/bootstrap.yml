@@ -1,0 +1,12 @@
+- name: Bootstrap NewsGenie platform host
+  hosts: newsgenie_hosts
+  become: true
+  vars_files:
+    - secrets/newsgenie-secrets.vault.yml
+  roles:
+    - base
+    - k3s
+    - helm
+    - argocd
+    - bootstrap_secrets
+    - argocd_apps

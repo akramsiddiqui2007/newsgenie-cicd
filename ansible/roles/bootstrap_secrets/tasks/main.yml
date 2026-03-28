@@ -1,0 +1,58 @@
+- name: Check if NewsGenie namespace exists
+  command: kubectl get namespace {{ newsgenie_secret_namespace }} -o name
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: newsgenie_ns_check
+  failed_when: false
+  changed_when: false
+
+- name: Create NewsGenie namespace only if missing
+  command: kubectl create namespace {{ newsgenie_secret_namespace }}
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  when: newsgenie_ns_check.rc != 0
+  register: newsgenie_ns_create
+  changed_when: newsgenie_ns_check.rc != 0
+
+- name: Write desired NewsGenie secret manifest to temp file
+  copy:
+    dest: /tmp/newsgenie-secret.yaml
+    mode: '0600'
+    content: |
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: {{ newsgenie_secret_name }}
+        namespace: {{ newsgenie_secret_namespace }}
+      type: Opaque
+      stringData:
+      {% for item in newsgenie_env | dict2items %}
+        {{ item.key }}: "{{ item.value }}"
+      {% endfor %}
+  changed_when: false
+  no_log: true
+
+- name: Check whether NewsGenie secret differs
+  command: kubectl diff -f /tmp/newsgenie-secret.yaml
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: newsgenie_secret_diff
+  failed_when: newsgenie_secret_diff.rc not in [0, 1]
+  changed_when: newsgenie_secret_diff.rc == 1
+  no_log: true
+
+- name: Apply NewsGenie secret only when it differs
+  command: kubectl apply -f /tmp/newsgenie-secret.yaml
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  when: newsgenie_secret_diff.rc == 1
+  register: newsgenie_secret_apply
+  changed_when: true
+  no_log: true
+
+- name: Remove temp secret manifest
+  file:
+    path: /tmp/newsgenie-secret.yaml
+    state: absent
+  changed_when: false
+  no_log: true

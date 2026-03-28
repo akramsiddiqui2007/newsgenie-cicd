@@ -1,0 +1,16 @@
+- name: Check if Helm is installed
+  command: helm version --short
+  register: helm_version
+  failed_when: false
+  changed_when: false
+
+- name: Download Helm install script if Helm missing
+  get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: '0700'
+  when: helm_version.rc != 0
+
+- name: Install Helm if missing
+  command: /tmp/get_helm.sh
+  when: helm_version.rc != 0
