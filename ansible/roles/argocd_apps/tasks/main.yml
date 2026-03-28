@@ -26,6 +26,14 @@
     dest: /tmp/argocd-bootstrap/monitoring-application.yaml
     mode: '0644'
 
+- name: Ensure monitoring namespace exists for monitoring chart hooks
+  command: kubectl create namespace monitoring
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: monitoring_ns_create
+  failed_when: false
+  changed_when: "'created' in (monitoring_ns_create.stdout | default(''))"
+
 - name: Apply NewsGenie Argo CD application
   command: kubectl apply -f /tmp/argocd-bootstrap/newsgenie-application.yaml
   environment:
